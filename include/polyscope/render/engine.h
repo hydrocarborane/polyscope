@@ -329,6 +329,10 @@ public:
   glm::vec4 getCurrentViewport();
   void setCurrentPixelScaling(float scale);
   float getCurrentPixelScaling();
+  void setCurrentGuiScaling(float scale);
+  float getCurrentGuiScaling();
+  bool shouldUpdateGuiScale();
+  void updateGuiScale();
 
   // Helpers
   void allocateGlobalBuffersAndPrograms(); // called once during startup
@@ -413,7 +417,7 @@ public:
   virtual void applyTransparencySettings() = 0;
   void addSlicePlane(std::string uniquePostfix);
   void removeSlicePlane(std::string uniquePostfix);
-  bool slicePlanesEnabled(); // true if there is at least one slice plane in the scene
+  bool slicePlanesEnabled();                     // true if there is at least one slice plane in the scene
   virtual void setFrontFaceCCW(bool newVal) = 0; // true if CCW triangles are considered front-facing; false otherwise
   bool getFrontFaceCCW();
 
@@ -466,7 +470,9 @@ protected:
   bool enableFXAA = true;
   glm::vec4 currViewport; // TODO remove global viewport size. There is no reason for this, and stops us from doing
                           // screenshot renders while minimized.
-  float currPixelScale;
+  float currPixelScale = 1.0f;
+  bool guiScaleDirty = false;
+  float currGuiScale = 1.0f;
   TransparencyMode transparencyMode = TransparencyMode::None;
   int slicePlaneCount = 0;
   bool frontFaceCCW = true;

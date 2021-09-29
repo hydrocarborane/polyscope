@@ -167,6 +167,14 @@ void Engine::buildEngineGui() {
 
     // == Transparency
     ImGui::SetNextTreeNodeOpen(false, ImGuiCond_FirstUseEver);
+    if (ImGui::BeginCombo("GUI Scale", std::to_string(currPixelScale).c_str())) {
+      for (float v : {0.25f, 0.5f, 1.0f, 2.0f, 4.0f}) {
+        if (ImGui::Selectable(std::to_string(v).c_str(), currPixelScale == v)) {
+          setCurrentGuiScaling(v);
+        }
+      }
+      ImGui::EndCombo();
+    }
     if (ImGui::TreeNode("Transparency")) {
 
       if (ImGui::BeginCombo("Mode", modeName(transparencyMode).c_str())) {
@@ -286,6 +294,9 @@ void Engine::buildEngineGui() {
 
     ImGui::TreePop();
   }
+  if (guiScaleDirty) {
+    configureImGui();
+  }
 }
 
 void Engine::setBackgroundColor(glm::vec3 c) {
@@ -298,10 +309,18 @@ void Engine::setBackgroundAlpha(float newAlpha) {
   targetBuffer.clearAlpha = newAlpha;
 }
 
+bool Engine::shouldUpdateGuiScale() { return guiScaleDirty; }
+void Engine::updateGuiScale() { configureImGui(); }
+
 void Engine::setCurrentViewport(glm::vec4 val) { currViewport = val; }
 glm::vec4 Engine::getCurrentViewport() { return currViewport; }
 void Engine::setCurrentPixelScaling(float val) { currPixelScale = val; }
 float Engine::getCurrentPixelScaling() { return currPixelScale; }
+void Engine::setCurrentGuiScaling(float val) {
+  currGuiScale = val;
+  guiScaleDirty = true;
+}
+float Engine::getCurrentGuiScaling() { return currGuiScale; }
 
 void Engine::bindDisplay() {
   FrameBuffer& targetBuffer = useAltDisplayBuffer ? *displayBufferAlt : *displayBuffer;
@@ -919,25 +938,23 @@ const unsigned int* getCousineRegularCompressedData();
 unsigned int getLatoRegularCompressedSize();
 const unsigned int* getLatoRegularCompressedData();
 
-
 void Engine::configureImGui() {
 
   ImGuiIO& io = ImGui::GetIO();
 
   { // add regular font
     ImFontConfig config;
-    regularFont = io.Fonts->AddFontFromMemoryCompressedTTF(getLatoRegularCompressedData(),
-                                                           getLatoRegularCompressedSize(), 18.0f, &config);
+    regularFont = io.Fonts->AddFontFromMemoryCompressedTTF(
+        getLatoRegularCompressedData(), getLatoRegularCompressedSize(), floor(currGuiScale * 18.0f), &config);
   }
 
   { // add mono font
     ImFontConfig config;
-    monoFont = io.Fonts->AddFontFromMemoryCompressedTTF(getCousineRegularCompressedData(),
-                                                        getCousineRegularCompressedSize(), 16.0f, &config);
+    monoFont = io.Fonts->AddFontFromMemoryCompressedTTF(
+        getCousineRegularCompressedData(), getCousineRegularCompressedSize(), floor(currGuiScale * 16.0f), &config);
   }
 
   // io.Fonts->AddFontFromFileTTF("test-font-name.ttf", 16);
-
   io.Fonts->Build();
   globalFontAtlas = io.Fonts;
 
